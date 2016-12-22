@@ -1,1 +1,74 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto');
+
 @main-color: #17AC5B;
+@border-color: #2196f3;
+
+.cg-input {
+  position: relative;
+  display: inline-block;
+  font-family: 'Roboto', sans-serif;
+}
+.cg-input input{
+  width: 300px;
+  padding: 5px;
+  border: none;
+  border-bottom: 3px solid @border-color;
+  font-size: 16px;
+  background: #333;
+  color: #fff;
+  font-family: 'Roboto', sans-serif;
+
+  &:focus {
+    outline: none;
+  }
+}
+.cg-input.disabled {
+  input {
+    border-bottom: 3px solid #777;
+  }
+  label {
+    color: #777;
+  }
+}
+
+.cg-input label {
+  position: absolute;
+  padding: 0 5px;
+  top: -20px;
+  color: #2196f3;
+}
+
+/* Start Block Styles */
+/* Spinner Styles Block*/
+.cg-spinner .cg-spinner-increase,
+.cg-spinner .cg-spinner-decrease {
+  position: absolute;
+  height: 50%;
+  width: 20px;
+  right: 0;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+.cg-spinner .cg-spinner-increase {
+  top: 0;
+  border-bottom: 0;
+}
+.cg-spinner .cg-spinner-decrease {
+  bottom: 0;
+  border-top: none;
+}
+.cg-spinner .cg-spinner-increase span,
+.cg-spinner .cg-spinner-decrease span {
+  position: absolute;
+  width: 0;
+  height: 0;
+  right: 0;
+  border-width: 6px;
+  border-style: solid;
+}
+.cg-spinner .cg-spinner-increase span {
+  border-color: transparent transparent #fff transparent;
+}
+.cg-spinner .cg-spinner-decrease span {
+  border-color: #fff transparent transparent transparent;
+}

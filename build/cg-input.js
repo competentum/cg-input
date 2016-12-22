@@ -1,5 +1,5 @@
 /*!
- * cg-template-component v0.0.1 - Template Project for Competentum Group Components
+ * cg-input v0.0.1 - Accessibility Input Component
  * 
  * (c) 2015-2016 Competentum Group | http://competentum.com
  * Released under the MIT license
@@ -11,9 +11,9 @@
 	else if(typeof define === 'function' && define.amd)
 		define([], factory);
 	else if(typeof exports === 'object')
-		exports["CgTemplateComponent"] = factory();
+		exports["CgInput"] = factory();
 	else
-		root["CgTemplateComponent"] = factory();
+		root["CgInput"] = factory();
 })(this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -82,6 +82,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _cgComponentUtils2 = _interopRequireDefault(_cgComponentUtils);
 
+	var _merge = __webpack_require__(9);
+
+	var _merge2 = _interopRequireDefault(_merge);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -90,18 +94,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	// todo: describe settings properties here
-	/**
-	 * Slider's customizing settings
-	 * @typedef {Object} TemplateComponentSettings
-	 * @property {Element|string} container - DOM Element or element id in which slider should be rendered.
-	 *                                        This property can be omitted. In this case new DOM element will be created and can be accessed via `sliderInstance.container`
-	 */
+	var INPUT_CLASS = 'cg-input';
 
-	var CgTemplateComponent = function (_EventEmitter) {
-	  _inherits(CgTemplateComponent, _EventEmitter);
+	var CgInput = function (_EventEmitter) {
+	  _inherits(CgInput, _EventEmitter);
 
-	  _createClass(CgTemplateComponent, null, [{
+	  _createClass(CgInput, null, [{
 	    key: 'DEFAULT_SETTINGS',
 
 
@@ -113,7 +111,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    get: function get() {
 	      if (!this._DEFAULT_SETTINGS) {
 	        this._DEFAULT_SETTINGS = {
-	          // todo: add defaults here
+	          placeholder: 'Placeholder',
+	          stepper: {
+	            step: 2
+	          }
 	        };
 	      }
 	      return this._DEFAULT_SETTINGS;
@@ -123,47 +124,78 @@ return /******/ (function(modules) { // webpackBootstrap
 	    get: function get() {
 	      if (!this._EVENTS) {
 	        this._EVENTS = {
-	          CHANGE: 'change'
+	          FOCUS: 'focus',
+	          CHANGE: 'change',
+	          BLUR: 'blur'
 	        };
 	      }
 	      return this._EVENTS;
 	    }
-
-	    /**
-	     *
-	     * @param {TemplateComponentSettings} settings
-	     */
-
 	  }]);
 
-	  function CgTemplateComponent(settings) {
-	    _classCallCheck(this, CgTemplateComponent);
+	  function CgInput(settings) {
+	    _classCallCheck(this, CgInput);
 
-	    //todo: initialization
-	    var _this = _possibleConstructorReturn(this, (CgTemplateComponent.__proto__ || Object.getPrototypeOf(CgTemplateComponent)).call(this));
+	    var _this = _possibleConstructorReturn(this, (CgInput.__proto__ || Object.getPrototypeOf(CgInput)).call(this));
 
-	    _this.settings = settings;
+	    _this.settings = _merge2.default.recursive(true, _this.constructor.DEFAULT_SETTINGS, settings || {});
+
+	    _this._render();
 	    return _this;
 	  }
 
-	  /**
-	   * @private
-	   */
+	  _createClass(CgInput, [{
+	    key: 'focus',
+	    value: function focus() {
+	      if (this.empty) {
+	        this.value = '';
+	      }
+	    }
+	  }, {
+	    key: 'blur',
+	    value: function blur() {
+	      if (!this.value) {
+	        this._element.value = this.placeholder;
+	        this.empty = true;
+	      }
+	    }
 
+	    /**
+	     * @private
+	     */
 
-	  _createClass(CgTemplateComponent, [{
+	  }, {
 	    key: '_render',
 	    value: function _render() {
-	      //todo: draw here
-	      var elementHTML = '\n      <div></div>\n    ';
-	      _cgComponentUtils2.default.createHTML(elementHTML);
+	      this._element = _cgComponentUtils2.default.createHTML('<input />');
+
+	      this._element.addEventListener('focus', this.focus.bind(this));
+	      this._element.addEventListener('blur', this.blur.bind(this));
+
+	      this.settings.container.appendChild(this._element);
+	    }
+	  }, {
+	    key: 'value',
+	    get: function get() {
+	      return this._element.value;
+	    },
+	    set: function set(value) {
+	      this._element.value = value;
+	    }
+	  }, {
+	    key: 'placeholder',
+	    get: function get() {
+	      return this.settings.placeholder;
+	    },
+	    set: function set(text) {
+	      this.settings.placeholder = text;
 	    }
 	  }]);
 
-	  return CgTemplateComponent;
+	  return CgInput;
 	}(_events2.default);
 
-	module.exports = CgTemplateComponent;
+	module.exports = CgInput;
 
 /***/ },
 /* 2 */
@@ -930,6 +962,203 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return i > -1;
 	    };
 	}
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(module) {/*!
+	 * @name JavaScript/NodeJS Merge v1.2.0
+	 * @author yeikos
+	 * @repository https://github.com/yeikos/js.merge
+
+	 * Copyright 2014 yeikos - MIT license
+	 * https://raw.github.com/yeikos/js.merge/master/LICENSE
+	 */
+
+	;(function(isNode) {
+
+		/**
+		 * Merge one or more objects 
+		 * @param bool? clone
+		 * @param mixed,... arguments
+		 * @return object
+		 */
+
+		var Public = function(clone) {
+
+			return merge(clone === true, false, arguments);
+
+		}, publicName = 'merge';
+
+		/**
+		 * Merge two or more objects recursively 
+		 * @param bool? clone
+		 * @param mixed,... arguments
+		 * @return object
+		 */
+
+		Public.recursive = function(clone) {
+
+			return merge(clone === true, true, arguments);
+
+		};
+
+		/**
+		 * Clone the input removing any reference
+		 * @param mixed input
+		 * @return mixed
+		 */
+
+		Public.clone = function(input) {
+
+			var output = input,
+				type = typeOf(input),
+				index, size;
+
+			if (type === 'array') {
+
+				output = [];
+				size = input.length;
+
+				for (index=0;index<size;++index)
+
+					output[index] = Public.clone(input[index]);
+
+			} else if (type === 'object') {
+
+				output = {};
+
+				for (index in input)
+
+					output[index] = Public.clone(input[index]);
+
+			}
+
+			return output;
+
+		};
+
+		/**
+		 * Merge two objects recursively
+		 * @param mixed input
+		 * @param mixed extend
+		 * @return mixed
+		 */
+
+		function merge_recursive(base, extend) {
+
+			if (typeOf(base) !== 'object')
+
+				return extend;
+
+			for (var key in extend) {
+
+				if (typeOf(base[key]) === 'object' && typeOf(extend[key]) === 'object') {
+
+					base[key] = merge_recursive(base[key], extend[key]);
+
+				} else {
+
+					base[key] = extend[key];
+
+				}
+
+			}
+
+			return base;
+
+		}
+
+		/**
+		 * Merge two or more objects
+		 * @param bool clone
+		 * @param bool recursive
+		 * @param array argv
+		 * @return object
+		 */
+
+		function merge(clone, recursive, argv) {
+
+			var result = argv[0],
+				size = argv.length;
+
+			if (clone || typeOf(result) !== 'object')
+
+				result = {};
+
+			for (var index=0;index<size;++index) {
+
+				var item = argv[index],
+
+					type = typeOf(item);
+
+				if (type !== 'object') continue;
+
+				for (var key in item) {
+
+					var sitem = clone ? Public.clone(item[key]) : item[key];
+
+					if (recursive) {
+
+						result[key] = merge_recursive(result[key], sitem);
+
+					} else {
+
+						result[key] = sitem;
+
+					}
+
+				}
+
+			}
+
+			return result;
+
+		}
+
+		/**
+		 * Get type of variable
+		 * @param mixed input
+		 * @return string
+		 *
+		 * @see http://jsperf.com/typeofvar
+		 */
+
+		function typeOf(input) {
+
+			return ({}).toString.call(input).slice(8, -1).toLowerCase();
+
+		}
+
+		if (isNode) {
+
+			module.exports = Public;
+
+		} else {
+
+			window[publicName] = Public;
+
+		}
+
+	})(typeof module === 'object' && module && typeof module.exports === 'object' && module.exports);
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(10)(module)))
+
+/***/ },
+/* 10 */
+/***/ function(module, exports) {
+
+	module.exports = function(module) {
+		if(!module.webpackPolyfill) {
+			module.deprecate = function() {};
+			module.paths = [];
+			// module.parent = undefined by default
+			module.children = [];
+			module.webpackPolyfill = 1;
+		}
+		return module;
+	}
+
 
 /***/ }
 /******/ ])
