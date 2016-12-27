@@ -68,18 +68,20 @@
         let settings = [
             {
                 container: containers[0],
-                label: 'Number Spinner',
-                spinner: {
-                    step: 1
-                }
+                label: 'Text Input'
             },
             {
                 container: containers[1],
-                label: 'Number'
+                label: 'Number',
+                preset: 'number'
             },
             {
                 container: containers[2],
-                label: 'Text Input'
+                label: 'Number Spinner',
+                preset: 'number',
+                spinner: {
+                    step: 20
+                }
             },
             {
                 container: containers[3],

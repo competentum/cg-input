@@ -10,7 +10,7 @@ class Spinner {
     if (!this._DEFAULT_SETTINGS) {
       this._DEFAULT_SETTINGS = {
         min: 0,
-        max: 7,
+        max: 100,
         step: 1
       };
     }
@@ -24,28 +24,62 @@ class Spinner {
    */
   constructor(input, settings){
     this.input = input;
-    this.settings = merge.recursive(true, this.constructor.DEFAULT_SETTINGS, (settings || {}));
+
+    this.settings = merge.recursive(true, this.SETTINGS, settings);
 
     this._render();
+  }
+
+  get SETTINGS(){
+    return this.constructor.DEFAULT_SETTINGS;
   }
 
   get step(){
     return this.settings.step;
   }
 
+  set step(value){
+    this.settings.step = value;
+  }
+
+  get max(){
+    return this.settings.max;
+  }
+
+  set max(value){
+    this.settings.max = value;
+  }
+
+  get min(){
+    return this.settings.min;
+  }
+
+  set min(value){
+    this.settings.min = value;
+  }
+
   increase(){
-    this.input.value = parseInt(this.input.value, 10) + this.step;
+    this.value = this.input.value + this.step;
+    this._update();
   }
 
   decrease(){
-    this.input.value -= this.step;
+    this.value = this.input.value - this.step;
+    this._update();
+  }
+
+  _update(){
+    this.value = isNaN(this.value) ? 0 : this.value;
+
+    this.input.value = this.value;
+    this.input.setInputValue(this.value);
   }
 
   _render(){
     let parent = this.input._element.parentNode;
 
-    let spinnerIncrease = `<a><span></span></a>`;
-    let spinnerDecrease = `<a><span></span></a>`;
+    let spinnerIncrease = '<a><span></span></a>';
+    let spinnerDecrease = '<a><span></span></a>';
 
     this._spinnerIncrease = utils.createHTML(spinnerIncrease);
     this._spinnerDecrease = utils.createHTML(spinnerDecrease);
@@ -61,8 +95,8 @@ class Spinner {
     }
 
     // Attach events
-    this._spinnerIncrease.addEventListener('click', this.increase.bind(this));
-    this._spinnerDecrease.addEventListener('click', this.decrease.bind(this));
+    this._spinnerIncrease.addEventListener('mousedown', this.increase.bind(this));
+    this._spinnerDecrease.addEventListener('mousedown', this.decrease.bind(this));
   }
 }
 
