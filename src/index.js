@@ -9,6 +9,12 @@ import merge from 'merge';
 import templates from './templates';
 
 const INPUT_CLASS = 'cg-input';
+const KEYCODE = {
+  ARROW: {
+    UP: 38,
+    DOWN: 40
+  }
+};
 
 class CgInput extends EventEmitter {
 
@@ -22,6 +28,7 @@ class CgInput extends EventEmitter {
       this._DEFAULT_SETTINGS = {
         label: false,
         placeholder: false,
+        disabled: false,
         spinner: false,
         value: false,
         preset: 'text',
@@ -53,7 +60,7 @@ class CgInput extends EventEmitter {
     super();
 
     this.settings = merge.recursive(true, this.SETTINGS, settings);
-    this.settings = merge.recursive(true, this.settings, templates[this.settings.preset]);
+    this.settings = merge.recursive(true, templates[this.settings.preset], this.settings);
 
     this._render();
     this._init();
@@ -80,37 +87,62 @@ class CgInput extends EventEmitter {
     this._change();
   }
 
-  setInputValue(value){
-    this._input(value);
-  }
-
   /**
    * Handle the entered value
    * @private
    */
   _input(){
+    let oldValue = this._element.oldValue || '';
     let value = this._element.value;
-    let transformedValue;
+    let shift = 0;
     let start;
     let diff;
 
-    // cut unnecessary characters
-    transformedValue = this._restrict(value);
+    // slice numeric value
+    let regex = /[0-9\-\.]+/g;
+    let matches = value.match(regex);
+    let transformed = matches ? matches.join('') : '';
+
+    let minusMatches = (transformed.match(/[\-]/g) || []).length;
+    let dotMatches = (transformed.match(/[\.]/g) || []).length;
+
+    if(dotMatches > 1){
+      var oldDotIndex = oldValue.indexOf('.');
+      var dotIndex = transformed.indexOf('.');
+
+      if(oldDotIndex === dotIndex){
+        transformed = transformed.substring(0, oldDotIndex) +
+                      transformed.substring(oldDotIndex + 1);
+      } else {
+        shift++;
+        transformed = transformed.substring(0, dotIndex) + '.' +
+                      transformed.substring(dotIndex + 1).replace(/[\.]/g, '');
+      }
+    }
+
+    if(minusMatches){
+      var sign = (minusMatches > 1) ? '' : '-';
+
+      // placed minus in the beginning of the line
+      transformed = sign + transformed.replace(/[-]/g, '');
+    }
 
     // calculate differense between input and transformed value
-    diff = value.length - transformedValue.length;
+    diff = value.length - transformed.length;
 
     // write selection start position
     start = this._element.selectionStart;
-    start = isNaN(start) ? value.length : start;
+    start = isNaN(start) ? value.length : start + shift;
     start = (diff !== 0) ? start - diff : start;
 
-    this._element.value = transformedValue;
+    this._element.value = transformed;
+    this._element.oldValue = transformed;
+
     this._element.selectionStart = start;
     this._element.selectionEnd = start;
 
-    if(this.value != transformedValue){
-      this.value = this._unformat(transformedValue);
+    if(this.value != transformed){
+      this.value = this._unformat(transformed);
     }
 
     this.emit(this.constructor.EVENTS.INPUT);
@@ -131,11 +163,7 @@ class CgInput extends EventEmitter {
   }
 
   _format() {
-    return this.settings.formatter(this.value);
-  }
-
-  update(){
-
+    return this.settings.formatter(this.value) || '';
   }
 
   /**
@@ -156,6 +184,8 @@ class CgInput extends EventEmitter {
    * Blur callback
    */
   _blur() {
+    this._element.value = this._format();
+
     this.emit(this.constructor.EVENTS.BLUR);
   }
 
@@ -163,9 +193,9 @@ class CgInput extends EventEmitter {
    * Disable formatting input
    */
   disable() {
-    if(this.disabled) return;
+    if(!this.settings.disabled) return;
 
-    this.disabled = true;
+    this.settings.disabled = true;
     this._element.disabled = true;
 
     utils.addClass(this.container, 'disabled');
@@ -175,9 +205,9 @@ class CgInput extends EventEmitter {
    * Enable formatting input
    */
   enable() {
-    if(!this.disabled) return;
+    if(this.settings.disabled) return;
 
-    this.disabled = false;
+    this.settings.disabled = false;
     this._element.disabled = false;
 
     utils.removeClass(this.container, 'disabled');
@@ -198,8 +228,6 @@ class CgInput extends EventEmitter {
     this._element.addEventListener('blur', this._blur.bind(this));
     this._element.addEventListener('input', this._input.bind(this));
 
-    this.on(this.constructor.EVENTS.INPUT, this.update.bind(this));
-
     // if user don't pass container in the settings
     if(typeof this.container === 'undefined'){
       this.container = utils.createHTML('<div></div>');
@@ -212,12 +240,26 @@ class CgInput extends EventEmitter {
   }
 
   _init() {
-    if(this.settings.label){
-      this._elementLabel.innerHTML = this.settings.label;
-    }
+    this._elementLabel.innerHTML = this.settings.label || '';
+    this._element.value = this.settings.value || '';
+
+    this.disable();
 
     if(this.settings.spinner){
       this.spinner = new Spinner(this, this.settings.spinner);
+
+      this._element.addEventListener('keydown', (e) => {
+        switch(e.which || e.keyCode){
+          case KEYCODE.ARROW.UP:
+            this.spinner.increase();
+            e.preventDefault();
+            break;
+          case KEYCODE.ARROW.DOWN:
+            this.spinner.decrease();
+            e.preventDefault();
+            break;
+        }
+      });
     }
   }
 }

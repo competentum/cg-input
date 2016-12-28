@@ -80,19 +80,23 @@
                 label: 'Number Spinner',
                 preset: 'number',
                 spinner: {
-                    step: 20
+                    step: 5,
+                    min: -100,
+                    max: 110
                 }
             },
             {
                 container: containers[3],
-                label: 'Format Input',
+                label: 'Format Spinner',
+                spinner: true,
                 formatter: function(v){
                     return parseFloat(v).toFixed(2) + '%';
                 }
             },
             {
                 container: containers[4],
-                label: 'Disabled Input'
+                label: 'Disabled Input',
+                disabled: true
             }
         ];
 
@@ -100,7 +104,7 @@
         new CgInput(settings[1]);
         new CgInput(settings[2]);
         new CgInput(settings[3]);
-        new CgInput(settings[4]).disable();
+        new CgInput(settings[4]);
 
     </script>
 </body>

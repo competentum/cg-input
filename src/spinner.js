@@ -70,9 +70,11 @@ class Spinner {
 
   _update(){
     this.value = isNaN(this.value) ? 0 : this.value;
+    this.value = Math.max(this.min, this.value);
+    this.value = Math.min(this.max, this.value);
 
     this.input.value = this.value;
-    this.input.setInputValue(this.value);
+    this.input._element.value = this.value;
   }
 
   _render(){

@@ -1,11 +1,11 @@
 export default {
   number: {
-    restrict: '-?[0-9]+',
+    restrict: '[0-9\-\.]+',
     formatter: function(v){
       return v;
     },
     unformatter: function(v){
-      v = parseInt(v, 10);
+      v = parseFloat(v);
       v = isNaN(v) ? '' : v;
 
       return v;
