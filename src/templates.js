@@ -18,16 +18,12 @@ export default {
     }
   },
   percent: {
-    restrict: '[0-9\-\.]+',
+    restrict: '[0-9\-\.%]+',
     formatter: function(v){
-      return v + '%';
+      return v.toFixed(2) + '%';
     },
     unformatter: function(v){
-      v = v.replace(/%/g, '');
-      v = parseInt(v, 10);
-      v = isNaN(v) ? '' : v;
-
-      return v;
+      return Number(v.replace(/%/g, ''));
     }
   }
 };

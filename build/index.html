@@ -68,13 +68,13 @@
         let settings = [
             {
                 container: containers[0],
-                label: 'Text Input'
+                label: 'Text Input',
+                restrict: '[A-Za-z]'
             },
             {
                 container: containers[1],
                 label: 'Number',
-                preset: 'number',
-                restrict: '[0-9\-\.]'
+                preset: 'number'
             },
             {
                 container: containers[2],
@@ -90,9 +90,7 @@
                 container: containers[3],
                 label: 'Format Spinner',
                 spinner: true,
-                formatter: function(v){
-                    return parseFloat(v).toFixed(2) + '%';
-                }
+                preset: 'percent'
             },
             {
                 container: containers[4],

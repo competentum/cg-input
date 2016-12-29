@@ -103,7 +103,7 @@ class CgInput extends EventEmitter {
     transformedValue = this._restrict(value);
     unformat = this._unformat(transformedValue);
 
-    if(unformat && this.value !== unformat){
+    if(this.value !== unformat){
       this.value = unformat;
     }
 
@@ -143,11 +143,19 @@ class CgInput extends EventEmitter {
   }
 
   _unformat(value){
-    return this.settings.unformatter(value);
+    value = value || this._element.value;
+
+    if(value != null){
+      return this.settings.unformatter(value);
+    }
+    return '';
   }
 
   _format() {
-    return this.settings.formatter(this.value) || '';
+    if(this.value != null){
+      return this.settings.formatter(this.value);
+    }
+    return '';
   }
 
   /**
