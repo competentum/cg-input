@@ -5,10 +5,7 @@ export default {
       return v;
     },
     unformatter: function(v){
-      v = parseFloat(v);
-      v = isNaN(v) ? '' : v;
-
-      return v;
+      return Number(v);
     }
   },
   text: {
@@ -21,7 +18,7 @@ export default {
     }
   },
   percent: {
-    restrict: '^-?[0-9]+',
+    restrict: '[0-9\-\.]+',
     formatter: function(v){
       return v + '%';
     },

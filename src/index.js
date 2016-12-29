@@ -31,6 +31,7 @@ class CgInput extends EventEmitter {
         disabled: false,
         spinner: false,
         value: false,
+        required: false,
         preset: 'text',
         restrict: '.',
         formatter: function (v) {
@@ -59,8 +60,8 @@ class CgInput extends EventEmitter {
   constructor(settings) {
     super();
 
-    this.settings = merge.recursive(true, this.SETTINGS, settings);
-    this.settings = merge.recursive(true, templates[this.settings.preset], this.settings);
+    this.settings = merge.recursive(true, templates[settings.preset], settings);
+    this.settings = merge.recursive(true, this.SETTINGS, this.settings);
 
     this._render();
     this._init();
@@ -92,58 +93,32 @@ class CgInput extends EventEmitter {
    * @private
    */
   _input(){
-    let oldValue = this._element.oldValue || '';
     let value = this._element.value;
-    let shift = 0;
+    let transformedValue;
     let start;
     let diff;
+    let unformat;
 
-    // slice numeric value
-    let regex = /[0-9\-\.]+/g;
-    let matches = value.match(regex);
-    let transformed = matches ? matches.join('') : '';
+    // cut unnecessary characters
+    transformedValue = this._restrict(value);
+    unformat = this._unformat(transformedValue);
 
-    let minusMatches = (transformed.match(/[\-]/g) || []).length;
-    let dotMatches = (transformed.match(/[\.]/g) || []).length;
-
-    if(dotMatches > 1){
-      var oldDotIndex = oldValue.indexOf('.');
-      var dotIndex = transformed.indexOf('.');
-
-      if(oldDotIndex === dotIndex){
-        transformed = transformed.substring(0, oldDotIndex) +
-                      transformed.substring(oldDotIndex + 1);
-      } else {
-        shift++;
-        transformed = transformed.substring(0, dotIndex) + '.' +
-                      transformed.substring(dotIndex + 1).replace(/[\.]/g, '');
-      }
-    }
-
-    if(minusMatches){
-      var sign = (minusMatches > 1) ? '' : '-';
-
-      // placed minus in the beginning of the line
-      transformed = sign + transformed.replace(/[-]/g, '');
+    if(unformat && this.value !== unformat){
+      this.value = unformat;
     }
 
     // calculate differense between input and transformed value
-    diff = value.length - transformed.length;
+    diff = value.length - transformedValue.length;
 
     // write selection start position
     start = this._element.selectionStart;
-    start = isNaN(start) ? value.length : start + shift;
+    start = isNaN(start) ? value.length : start;
     start = (diff !== 0) ? start - diff : start;
 
-    this._element.value = transformed;
-    this._element.oldValue = transformed;
-
+    this._element.value = transformedValue;
+    this._element.oldValue = transformedValue;
     this._element.selectionStart = start;
     this._element.selectionEnd = start;
-
-    if(this.value != transformed){
-      this.value = this._unformat(transformed);
-    }
 
     this.emit(this.constructor.EVENTS.INPUT);
   }
@@ -156,6 +131,15 @@ class CgInput extends EventEmitter {
     let matches = value.match(regex) || [];
 
     return matches.join('');
+  }
+
+  /**
+   * Compare current view and model values
+   * @returns {boolean}
+   * @private
+   */
+  _compare(){
+    return (this.value === this._unformat(this._element.value));
   }
 
   _unformat(value){
@@ -262,6 +246,63 @@ class CgInput extends EventEmitter {
       });
     }
   }
+
+  /*
+  _input(){
+   let oldValue = this._element.oldValue || '';
+   let value = this._element.value;
+   let shift = 0;
+   let start;
+   let diff;
+
+   // slice numeric value
+   let regex = /[0-9\-\.]+/g;
+   let matches = value.match(regex);
+   let transformed = matches ? matches.join('') : '';
+
+   let minusMatches = (transformed.match(/[\-]/g) || []).length;
+   let dotMatches = (transformed.match(/[\.]/g) || []).length;
+
+   if(dotMatches > 1){
+   var oldDotIndex = oldValue.indexOf('.');
+   var dotIndex = transformed.indexOf('.');
+
+   if(oldDotIndex === dotIndex){
+   transformed = transformed.substring(0, oldDotIndex) +
+   transformed.substring(oldDotIndex + 1);
+   } else {
+   shift++;
+   transformed = transformed.substring(0, dotIndex) + '.' +
+   transformed.substring(dotIndex + 1).replace(/[\.]/g, '');
+   }
+   }
+
+   if(minusMatches){
+      var sign = (minusMatches > 1) ? '' : '-';
+
+      // placed minus in the beginning of the line
+      transformed = sign + transformed.replace(/[-]/g, '');
+   }
+
+   // calculate differense between input and transformed value
+   diff = value.length - transformed.length;
+
+   // write selection start position
+   start = this._element.selectionStart;
+   start = isNaN(start) ? value.length : start + shift;
+   start = (diff !== 0) ? start - diff : start;
+
+   this._element.value = transformed;
+   this._element.oldValue = transformed;
+
+   this._element.selectionStart = start;
+   this._element.selectionEnd = start;
+
+   if(this.value != transformed){
+    this.value = this._unformat(transformed);
+   }
+  }
+  * */
 }
 
 module.exports = CgInput;
