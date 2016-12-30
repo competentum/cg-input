@@ -74,7 +74,7 @@ class Spinner {
     this.value = Math.min(this.max, this.value);
 
     this.input.value = this.value;
-    this.input._element.value = this.value;
+    this.input.setValue(this.value, true);
   }
 
   _render(){

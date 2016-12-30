@@ -37,8 +37,11 @@ class CgInput extends EventEmitter {
         formatter: function (v) {
           return v;
         },
-        unformatter: function (v){
+        unformatter: function (v) {
           return v;
+        },
+        validate: function(v){
+          return typeof v !== 'undefined';
         }
       };
     }
@@ -67,7 +70,7 @@ class CgInput extends EventEmitter {
     this._init();
   }
 
-  get SETTINGS(){
+  get SETTINGS() {
     return this.constructor.DEFAULT_SETTINGS;
   }
 
@@ -85,45 +88,122 @@ class CgInput extends EventEmitter {
    */
   set value(value) {
     this._value = value;
-    this._change();
+  }
+
+  /**
+   *
+   * @param label
+   */
+  set label(label){
+    this.settings.label = label;
+    this._elementLabel.innerHTML = label;
+  }
+
+  get label(){
+    return this.settings.label;
+  }
+
+  /**
+   *
+   * @param value
+   */
+  set placeholder(value){
+    this.settings.placeholder = value;
+    this._element.placeholder = value;
+  }
+
+  get placeholder(){
+    return this.settings.placeholder;
+  }
+
+  /**
+   *
+   * @param disable
+   */
+  set disabled(disable){
+    this.settings.disabled = disable;
+    this._element.disabled = disable;
+
+    let changeClass;
+
+    changeClass = disable ? utils.addClass : utils.removeClass;
+    changeClass(this.container, 'disabled');
+  }
+
+  get disabled(){
+    return this.settings.disabled;
+  }
+
+  /**
+   *
+   * @param value
+   */
+  set restrict(value){
+    if(typeof value === 'string'){
+      this.settings.restrict = value;
+    }
+  }
+
+  get restrict(){
+    return this.settings.restrict;
+  }
+
+  /**
+   * Set value into the input element
+   * @param {String} value
+   * @param {Boolean} [format] - use formatting or no
+   */
+  setValue(value, format){
+    let currentValue = this._element.value;
+    let diff;
+    let start;
+
+    // calculate differences between input and transformed value
+    diff = currentValue.length - value.length;
+
+    // write selection start position
+    start = this._element.selectionStart;
+    start = isNaN(start) ? currentValue.length : start;
+    start = (diff !== 0) ? start - diff : start;
+
+    value = format ? this._format() : value;
+
+    this._element.value = value;
+    this._element.oldValue = value;
+    this._element.selectionStart = start;
+    this._element.selectionEnd = start;
   }
 
   /**
    * Handle the entered value
    * @private
    */
-  _input(){
+  _input() {
     let value = this._element.value;
     let transformedValue;
-    let start;
-    let diff;
-    let unformat;
+    let unformatted;
+    let valid;
 
     // cut unnecessary characters
     transformedValue = this._restrict(value);
-    unformat = this._unformat(transformedValue);
+    unformatted =      this._unformat(transformedValue);
+    valid =            this._validate(unformatted);
 
-    if(this.value !== unformat){
-      this.value = unformat;
+    this.setValue(transformedValue, false);
+
+    // update model value
+    if (valid && this.value !== unformatted) {
+      this.value = unformatted;
     }
-
-    // calculate differense between input and transformed value
-    diff = value.length - transformedValue.length;
-
-    // write selection start position
-    start = this._element.selectionStart;
-    start = isNaN(start) ? value.length : start;
-    start = (diff !== 0) ? start - diff : start;
-
-    this._element.value = transformedValue;
-    this._element.oldValue = transformedValue;
-    this._element.selectionStart = start;
-    this._element.selectionEnd = start;
 
     this.emit(this.constructor.EVENTS.INPUT);
   }
 
-  _restrict(value, pattern){
+  _compare(){
+    return this.value == this._element.value;
+  }
+
+  _restrict(value, pattern) {
     pattern = pattern || this.settings.restrict;
 
     // create new regexp and find matches
@@ -134,28 +214,39 @@ class CgInput extends EventEmitter {
   }
 
   /**
-   * Compare current view and model values
-   * @returns {boolean}
+   *
+   * @param value
+   * @returns {*}
    * @private
    */
-  _compare(){
-    return (this.value === this._unformat(this._element.value));
+  _validate(value){
+    return this.settings.validate(value);
   }
 
-  _unformat(value){
+  /**
+   *
+   * @param {String} value
+   * @returns {*}
+   * @private
+   */
+  _unformat(value) {
     value = value || this._element.value;
+    value = value.toString();
 
-    if(value != null){
-      return this.settings.unformatter(value);
-    }
-    return '';
+    return value ? this.settings.unformatter(value) : '';
   }
 
+  /**
+   * format the data using formatter from settings
+   * @returns {*}
+   * @private
+   */
   _format() {
-    if(this.value != null){
+    if(this.value){
       return this.settings.formatter(this.value);
     }
-    return '';
+
+    return this._element.value || '';
   }
 
   /**
@@ -185,7 +276,7 @@ class CgInput extends EventEmitter {
    * Disable formatting input
    */
   disable() {
-    if(!this.settings.disabled) return;
+    if (!this.settings.disabled) return;
 
     this.settings.disabled = true;
     this._element.disabled = true;
@@ -197,7 +288,7 @@ class CgInput extends EventEmitter {
    * Enable formatting input
    */
   enable() {
-    if(this.settings.disabled) return;
+    if (this.settings.disabled) return;
 
     this.settings.disabled = false;
     this._element.disabled = false;
@@ -221,7 +312,7 @@ class CgInput extends EventEmitter {
     this._element.addEventListener('input', this._input.bind(this));
 
     // if user don't pass container in the settings
-    if(typeof this.container === 'undefined'){
+    if (typeof this.container === 'undefined') {
       this.container = utils.createHTML('<div></div>');
     }
 
@@ -237,11 +328,11 @@ class CgInput extends EventEmitter {
 
     this.disable();
 
-    if(this.settings.spinner){
+    if (this.settings.spinner) {
       this.spinner = new Spinner(this, this.settings.spinner);
 
       this._element.addEventListener('keydown', (e) => {
-        switch(e.which || e.keyCode){
+        switch (e.which || e.keyCode) {
           case KEYCODE.ARROW.UP:
             this.spinner.increase();
             e.preventDefault();
@@ -256,7 +347,7 @@ class CgInput extends EventEmitter {
   }
 
   /*
-  _input(){
+   _input(){
    let oldValue = this._element.oldValue || '';
    let value = this._element.value;
    let shift = 0;
@@ -286,10 +377,10 @@ class CgInput extends EventEmitter {
    }
 
    if(minusMatches){
-      var sign = (minusMatches > 1) ? '' : '-';
+   var sign = (minusMatches > 1) ? '' : '-';
 
-      // placed minus in the beginning of the line
-      transformed = sign + transformed.replace(/[-]/g, '');
+   // placed minus in the beginning of the line
+   transformed = sign + transformed.replace(/[-]/g, '');
    }
 
    // calculate differense between input and transformed value
@@ -307,10 +398,10 @@ class CgInput extends EventEmitter {
    this._element.selectionEnd = start;
 
    if(this.value != transformed){
-    this.value = this._unformat(transformed);
+   this.value = this._unformat(transformed);
    }
-  }
-  * */
+   }
+   * */
 }
 
 module.exports = CgInput;
